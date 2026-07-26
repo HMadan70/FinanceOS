@@ -6,13 +6,16 @@ import { router } from "expo-router";
 export default function Index() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
 
 const handleLogin = async () => {
     try {
       const data = await login(email, password);
       console.log("Success! Tokens:", data);
+      setMessage("Login successful!");
     } catch (error: any) {
       console.log("Login error:", error.message);
+      setMessage(error.message);
     }
   };
 
@@ -46,6 +49,8 @@ const handleLogin = async () => {
       <TouchableOpacity onPress={() => router.replace("/signup")}>
         <Text style={styles.link}>Don't have an account? Sign up</Text>
       </TouchableOpacity>
+
+      {message ? <Text style={styles.message}>{message}</Text> : null}
 
     </View>
   );
@@ -82,9 +87,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  link: { 
-    color: "#2563eb", 
-    textAlign: "center", 
-    marginTop: 16 
+  link: {
+    color: "#2563eb",
+    textAlign: "center",
+    marginTop: 16
+  },
+  message: {
+    textAlign: "center",
+    marginTop: 16,
+    color: "#333",
   },
 });
