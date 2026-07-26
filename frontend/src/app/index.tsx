@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Text, View, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { login } from "../api";
 import { router } from "expo-router";
+import { saveTokens } from "../auth";
 
 export default function Index() {
   const [email, setEmail] = useState("");
@@ -9,12 +10,12 @@ export default function Index() {
   const [message, setMessage] = useState("");
 
 const handleLogin = async () => {
+    setMessage("");
     try {
       const data = await login(email, password);
-      console.log("Success! Tokens:", data);
-      setMessage("Login successful!");
+      await saveTokens(data.access_token, data.refresh_token);
+      router.replace("/transactions");
     } catch (error: any) {
-      console.log("Login error:", error.message);
       setMessage(error.message);
     }
   };
