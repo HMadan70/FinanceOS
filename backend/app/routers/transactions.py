@@ -18,7 +18,7 @@ def create_transaction(
         amount=transaction.amount,
         description=transaction.description,
         category=transaction.category,
-        owner_id=current_user.id  # taken from the token, never from the request body
+        owner_id=current_user.id  
     )
     db.add(new_transaction)
     db.commit()

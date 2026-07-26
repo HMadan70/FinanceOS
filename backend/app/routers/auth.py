@@ -16,8 +16,15 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
             detail="Email already registered"
         )
 
+    existing_username = db.query(models.User).filter(models.User.username == user.username).first()
+    if existing_username:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already taken"
+        )
+
     hashed_password = auth.hash_password(user.password)
-    new_user = models.User(email=user.email, hashed_password=hashed_password)
+    new_user = models.User(email=user.email, username=user.username, hashed_password=hashed_password)
 
     db.add(new_user)
     db.commit()
@@ -27,7 +34,7 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=schemas.Token)
-def login(user: schemas.UserCreate, db: Session = Depends(get_db)):
+def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
 
     if not db_user or not auth.verify_password(user.password, db_user.hashed_password):
