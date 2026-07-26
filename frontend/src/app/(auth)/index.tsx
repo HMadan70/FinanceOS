@@ -1,21 +1,21 @@
 import { useState } from "react";
 import { Text, View, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { router } from "expo-router";
-import { signup } from "../api";
-import { colors, spacing, radius, fonts, shadow } from "../theme";
+import { login } from "../../api";
+import { saveTokens } from "../../auth";
+import { colors, spacing, radius, fonts, shadow } from "../../theme";
 
-export default function Signup() {
-  const [username, setUsername] = useState("");
+export default function Index() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
-  const handleSignup = async () => {
+  const handleLogin = async () => {
     setMessage("");
     try {
-      await signup(email, password, username);
-      setMessage("Account created! You can now log in.");
-      router.replace("/");
+      const data = await login(email, password);
+      await saveTokens(data.access_token, data.refresh_token);
+      router.replace("/transactions");
     } catch (error: any) {
       setMessage(error.message);
     }
@@ -24,17 +24,8 @@ export default function Signup() {
   return (
     <View style={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.brand}>Create Account</Text>
-        <Text style={styles.subtitle}>Join FinanceOS</Text>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Username"
-          placeholderTextColor={colors.muted}
-          value={username}
-          onChangeText={setUsername}
-          autoCapitalize="none"
-        />
+        <Text style={styles.brand}>FinanceOS</Text>
+        <Text style={styles.subtitle}>Welcome back</Text>
 
         <TextInput
           style={styles.input}
@@ -55,12 +46,12 @@ export default function Signup() {
           secureTextEntry
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleSignup}>
-          <Text style={styles.buttonText}>Sign Up</Text>
+        <TouchableOpacity style={styles.button} onPress={handleLogin}>
+          <Text style={styles.buttonText}>Log In</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => router.replace("/")}>
-          <Text style={styles.link}>Already have an account? Log in</Text>
+        <TouchableOpacity onPress={() => router.replace("/signup")}>
+          <Text style={styles.link}>Don't have an account? Sign up</Text>
         </TouchableOpacity>
 
         {message ? <Text style={styles.message}>{message}</Text> : null}
@@ -84,7 +75,7 @@ const styles = StyleSheet.create({
   },
   brand: {
     fontFamily: fonts.heading,
-    fontSize: 28,
+    fontSize: 32,
     color: colors.text,
     textAlign: "center",
   },

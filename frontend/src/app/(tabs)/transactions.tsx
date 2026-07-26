@@ -9,9 +9,9 @@ import {
   createCategory,
   updateTransaction,
   deleteTransaction,
-} from "../api";
-import { clearTokens } from "../auth";
-import { colors, spacing, radius, fonts, shadow } from "../theme";
+} from "../../api";
+import { clearTokens } from "../../auth";
+import { colors, spacing, radius, fonts, shadow } from "../../theme";
 
 export default function Transactions() {
   const [transactions, setTransactions] = useState<any[]>([]);
