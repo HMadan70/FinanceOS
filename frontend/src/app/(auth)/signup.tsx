@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Text, View, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { router } from "expo-router";
-import { signup } from "../../api";
+import { signup, login } from "../../api";
+import { saveTokens } from "../../auth";
 import { colors, spacing, radius, fonts, shadow } from "../../theme";
 
 export default function Signup() {
@@ -9,15 +10,26 @@ export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
 
   const handleSignup = async () => {
     setMessage("");
+    setBusy(true);
     try {
       await signup(email, password, username);
-      setMessage("Account created! You can now log in.");
-      router.replace("/");
+
+      // Registering doesn't return tokens, but the onboarding screen calls a
+      // protected endpoint and needs one. So log in immediately with the same
+      // credentials — the user never sees the login screen.
+      const data = await login(email, password);
+      await saveTokens(data.access_token, data.refresh_token);
+
+      // A brand-new account always has has_completed_onboarding = false, so
+      // unlike the login screen there's nothing to check — go straight there.
+      router.replace("/onboarding");
     } catch (error: any) {
       setMessage(error.message);
+      setBusy(false);
     }
   };
 
@@ -55,8 +67,14 @@ export default function Signup() {
           secureTextEntry
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleSignup}>
-          <Text style={styles.buttonText}>Sign Up</Text>
+        <TouchableOpacity
+          style={[styles.button, busy && styles.buttonDisabled]}
+          onPress={handleSignup}
+          disabled={busy}
+        >
+          <Text style={styles.buttonText}>
+            {busy ? "Creating account..." : "Sign Up"}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => router.replace("/")}>
@@ -111,6 +129,9 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     alignItems: "center",
     marginTop: spacing.s2,
+  },
+  buttonDisabled: {
+    backgroundColor: colors.neutral400,
   },
   buttonText: {
     fontFamily: fonts.bodySemibold,

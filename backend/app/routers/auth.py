@@ -6,6 +6,8 @@ from app import models, schemas, auth
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+DEFAULT_CATEGORIES = ["Food", "Transport", "Rent", "Entertainment", "Income", "Other"]
+
 
 @router.post("/register", response_model=schemas.UserResponse)
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
@@ -30,6 +32,10 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
 
+    for name in DEFAULT_CATEGORIES:
+        db.add(models.Category(name=name, owner_id=new_user.id))
+    db.commit()
+
     return new_user
 
 
@@ -47,6 +53,11 @@ def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
     refresh_token = auth.create_refresh_token({"user_id": db_user.id})
 
     return schemas.Token(access_token=access_token, refresh_token=refresh_token)
+
+
+@router.get("/me", response_model=schemas.UserResponse)
+def get_me(current_user: models.User = Depends(auth.get_current_user)):
+    return current_user
 
 
 @router.post("/refresh", response_model=schemas.Token)

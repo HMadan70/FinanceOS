@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Text, View, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { router } from "expo-router";
-import { login } from "../../api";
+import { login, getMe } from "../../api";
 import { saveTokens } from "../../auth";
 import { colors, spacing, radius, fonts, shadow } from "../../theme";
 
@@ -9,15 +9,34 @@ export default function Index() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  // Tracks the whole login + profile-check sequence, so the button can show
+  // progress and can't be pressed twice.
+  const [busy, setBusy] = useState(false);
 
   const handleLogin = async () => {
     setMessage("");
+    setBusy(true);
     try {
       const data = await login(email, password);
       await saveTokens(data.access_token, data.refresh_token);
-      router.replace("/transactions");
+
+      // Tokens alone don't tell us whether this user has onboarded, so ask the
+      // backend. This is awaited *before* any navigation happens — that's what
+      // prevents a flash of the wrong screen. The user stays on the login
+      // screen (with the button reading "Checking...") until we know where to
+      // send them, so we never render tabs and then bounce them to onboarding.
+      const me = await getMe();
+
+      if (me.has_completed_onboarding) {
+        router.replace("/home");
+      } else {
+        router.replace("/onboarding");
+      }
     } catch (error: any) {
       setMessage(error.message);
+      // Only reset on failure: a successful login navigates away and unmounts
+      // this screen, so there'd be no component left to re-enable.
+      setBusy(false);
     }
   };
 
@@ -46,8 +65,14 @@ export default function Index() {
           secureTextEntry
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Log In</Text>
+        <TouchableOpacity
+          style={[styles.button, busy && styles.buttonDisabled]}
+          onPress={handleLogin}
+          disabled={busy}
+        >
+          <Text style={styles.buttonText}>
+            {busy ? "Checking..." : "Log In"}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => router.replace("/signup")}>
@@ -102,6 +127,9 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     alignItems: "center",
     marginTop: spacing.s2,
+  },
+  buttonDisabled: {
+    backgroundColor: colors.neutral400,
   },
   buttonText: {
     fontFamily: fonts.bodySemibold,

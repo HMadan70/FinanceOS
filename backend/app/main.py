@@ -3,6 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.database import Base, engine
 from app.routers import auth as auth_router
 from app.routers import transactions as transactions_router
+from app.routers import categories as categories_router
+from app.routers import onboarding as onboarding_router
+from app.routers import months as months_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -19,6 +22,9 @@ app.add_middleware(
 
 app.include_router(auth_router.router)
 app.include_router(transactions_router.router)
+app.include_router(categories_router.router)
+app.include_router(onboarding_router.router)
+app.include_router(months_router.router)
 
 
 @app.get("/")
