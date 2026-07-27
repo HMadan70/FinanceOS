@@ -150,3 +150,52 @@ export async function deleteTransaction(id: number) {
   if (!response.ok) throw new Error("Failed to delete transaction");
   return response.json();
 }
+
+
+// Returns one of three shapes distinguished by `status` — see MonthCurrentResponse
+// on the backend. The Home screen branches its whole layout on this single call.
+export async function getCurrentMonth() {
+  const token = await getAccessToken();
+  const response = await fetch(`${API_URL}/months/current`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok) throw new Error("Failed to load this month");
+  return response.json();
+}
+
+export async function createMonth(startingBalance: number) {
+  const token = await getAccessToken();
+  const response = await fetch(`${API_URL}/months`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ starting_balance: startingBalance }),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || "Failed to start this month");
+  }
+  return response.json();
+}
+
+export async function chooseLeftoverChoice(
+  monthId: number,
+  choice: "savings" | "add_to_balance" | "discard"
+) {
+  const token = await getAccessToken();
+  const response = await fetch(`${API_URL}/months/${monthId}/leftover-choice`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ choice }),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || "Failed to save your choice");
+  }
+  return response.json();
+}
