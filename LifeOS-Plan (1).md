@@ -4,7 +4,7 @@
 
 ---
 
-## 1. Vision
+## 1. The Vision
 
 LifeOS is not one app — it's a **suite of independent apps**, each its own repo, each shippable on its own, that eventually connect through:
 - A shared identity/auth system (log in once, use everywhere)
